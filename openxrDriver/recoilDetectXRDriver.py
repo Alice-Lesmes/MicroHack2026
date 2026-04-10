@@ -268,14 +268,14 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
         )
         trigger_state = xr.get_action_state_boolean(session, get_info)
         if trigger_state.is_active: # Hopefully this is correct, maybe just 'true' might work - AL
-        # Current_state is True while the trigger is held down
-        if trigger_state.current_state:
-            # changed_since_last_sync ensures we only trigger once per distinct pull
-            if trigger_state.changed_since_last_sync:
-                print("Trigger was just pulled!")
-                print("We are in business")
-            else:
-                pass # Trigger is being held down
+            # Current_state is True while the trigger is held down
+            if trigger_state.current_state:
+                # changed_since_last_sync ensures we only trigger once per distinct pull
+                if trigger_state.changed_since_last_sync:
+                    print("Trigger was just pulled!")
+                    print("We are in business")
+                else:
+                    pass # Trigger is being held down
         # Idk what below does other than just print location of HMD and controllers - AL
 
         found_count = 0

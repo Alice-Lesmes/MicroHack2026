@@ -1,12 +1,10 @@
 import socket
 
-# Replace this with the IP address printed in your ESP32 Serial Monitor!
 ESP32_IP = "192.168.8.232" 
 PORT = 8080
 
 def send_message(message):
     try:
-        # 1. Create a TCP/IP socket
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print(f"Connecting to {ESP32_IP}:{PORT}...")
             
@@ -14,11 +12,9 @@ def send_message(message):
             s.settimeout(5.0) 
             s.connect((ESP32_IP, PORT))
             
-            # 2. Prepare the data
             # We add a newline '\n' because the ESP32 uses readStringUntil('\n')
             data_to_send = message + "\n"
             
-            # 3. Send the data (encoded to bytes)
             s.sendall(data_to_send.encode('utf-8'))
             
             print(f"Sent: {message}")

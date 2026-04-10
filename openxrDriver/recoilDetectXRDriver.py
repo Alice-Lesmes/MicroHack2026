@@ -101,20 +101,46 @@ controller_pose_action = xr.create_action(
         subaction_paths=controller_paths,
     ),
 )
+trigger_click_action = xr.create_action( # AI said this, pls work
+    action_set=action_set,
+    create_info=xr.ActionCreateInfo(
+        action_type=xr.ActionType.BOOLEAN_INPUT,
+        action_name="trigger_click",
+        localized_action_name="Trigger Click",
+        count_subaction_paths=len(controller_paths),
+        subaction_paths=controller_paths,
+    ),
+)
 suggested_bindings = (xr.ActionSuggestedBinding * 2)(
+    # Can ignore this below one - AL
     xr.ActionSuggestedBinding(
         action=controller_pose_action,
         binding=xr.string_to_path(
             instance=instance,
             path_string="/user/hand/left/input/grip/pose",
         ),
-    ),
+    ), # This here is useful to detect trigger clicks - AL
     xr.ActionSuggestedBinding(
-        action=controller_pose_action,
+        action=trigger_click_action, 
         binding=xr.string_to_path(
             instance=instance,
-            path_string="/user/hand/right/input/trigger/grip",
+            # Check the input trigger to see if it's 'pressed', 
+            # can change to 'value' instead of 'click' if you want granularity
+            path_string="/user/hand/right/input/trigger/click",
         ),
+    ),
+)
+# Suggest Oculus keybindings
+xr.suggest_interaction_profile_bindings(
+    instance=instance,
+    suggested_bindings=xr.InteractionProfileSuggestedBinding(
+        interaction_profile=xr.string_to_path(
+            instance,
+            # I sure hope this is the same for quest, should be
+            "/interaction_profiles/oculus/touch_controller",
+        ),
+        count_suggested_bindings=len(suggested_bindings),
+        suggested_bindings=suggested_bindings,
     ),
 )
 xr.suggest_interaction_profile_bindings(
@@ -156,7 +182,7 @@ action_spaces = [
     xr.create_action_space(
         session=session,
         create_info=xr.ActionSpaceCreateInfo(
-            action=controller_pose_action,
+            action=trigger_click_action, # Hopium for this working - AL
             subaction_path=controller_paths[1],
         ),
     ),
@@ -208,7 +234,7 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
         if platform.system() == "Windows":
             kernel32.QueryPerformanceCounter(ctypes.byref(pc_time))
             xr_time_now = time_from_perf_counter(instance, pc_time)
-        else:
+        else: # Linux
             time_float = time.clock_gettime(time.CLOCK_MONOTONIC)
             timespecTime.tv_sec = int(time_float)
             timespecTime.tv_nsec = int((time_float % 1) * 1e9)

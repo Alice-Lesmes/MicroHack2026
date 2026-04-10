@@ -230,6 +230,12 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
         # wait_frame()/begin_frame()/end_frame() are not required in headless mode
         xr.wait_frame(session=session)  # Helps SteamVR show application name better
         # Perform per-frame activities here
+        
+        # This code is to please my LSP, and maybe python idk - AL
+        if (session == None):
+            # FIXME: maybe change this print statement :3 - AL
+            print("Freak the FUCK out")
+            exit()
 
         if platform.system() == "Windows":
             kernel32.QueryPerformanceCounter(ctypes.byref(pc_time))
@@ -244,12 +250,34 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
             action_set=action_set,
             subaction_path=xr.NULL_PATH,
         )
+        # Idk what this does - AL
         xr.sync_actions(
             session=session,
             sync_info=xr.ActionsSyncInfo(
                 active_action_sets=[active_action_set],
             ),
         )
+        # Below is mostly/all vibed
+        # I assume the AI meant 'active_action_sets=' not just 'action_sets='
+        sync_info = xr.ActionsSyncInfo(active_action_sets=[active_action_set])
+        xr.sync_actions(session, sync_info)
+        # 2. Ask for the specific state of our trigger action
+        get_info = xr.ActionStateGetInfo(
+            action=trigger_click_action, 
+            subaction_path=xr.NULL_PATH
+        )
+        trigger_state = xr.get_action_state_boolean(session, get_info)
+        if trigger_state.is_active: # Hopefully this is correct, maybe just 'true' might work - AL
+        # Current_state is True while the trigger is held down
+        if trigger_state.current_state:
+            # changed_since_last_sync ensures we only trigger once per distinct pull
+            if trigger_state.changed_since_last_sync:
+                print("Trigger was just pulled!")
+                print("We are in business")
+            else:
+                pass # Trigger is being held down
+        # Idk what below does other than just print location of HMD and controllers - AL
+
         found_count = 0
         hmd_location = xr.locate_space(
             space=view_reference_space,

@@ -126,10 +126,11 @@ suggested_bindings = (xr.ActionSuggestedBinding * 2)(
             instance=instance,
             # Check the input trigger to see if it's 'pressed', 
             # can change to 'value' instead of 'click' if you want granularity
-            path_string="/user/hand/right/input/trigger/click",
+            path_string="/user/hand/right/input/trigger/value",
         ),
     ),
 )
+print(xr.string_to_path(instance, "/interaction_profiles/oculus/touch_controller"))
 # Suggest Oculus keybindings
 xr.suggest_interaction_profile_bindings(
     instance=instance,
@@ -143,6 +144,8 @@ xr.suggest_interaction_profile_bindings(
         suggested_bindings=suggested_bindings,
     ),
 )
+
+"""
 xr.suggest_interaction_profile_bindings(
     instance=instance,
     suggested_bindings=xr.InteractionProfileSuggestedBinding(
@@ -154,6 +157,7 @@ xr.suggest_interaction_profile_bindings(
         suggested_bindings=suggested_bindings,
     ),
 )
+
 xr.suggest_interaction_profile_bindings(
     instance=instance,
     suggested_bindings=xr.InteractionProfileSuggestedBinding(
@@ -165,6 +169,7 @@ xr.suggest_interaction_profile_bindings(
         suggested_bindings=suggested_bindings,
     ),
 )
+"""
 xr.attach_session_action_sets(
     session=session,
     attach_info=xr.SessionActionSetsAttachInfo(
@@ -178,14 +183,7 @@ action_spaces = [
             action=controller_pose_action,
             subaction_path=controller_paths[0],
         ),
-    ),
-    xr.create_action_space(
-        session=session,
-        create_info=xr.ActionSpaceCreateInfo(
-            action=trigger_click_action, # Hopium for this working - AL
-            subaction_path=controller_paths[1],
-        ),
-    ),
+    )
 ]
 reference_space = xr.create_reference_space(
     session=session,

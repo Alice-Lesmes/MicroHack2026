@@ -32,7 +32,7 @@ session = xr.create_session(
     )
 )
 
-if platform.system() == "Windows":
+if platform.system() == "Windows": # TODO: work on this stuff, but for now i'm priortising Linux
     import ctypes.wintypes
     pc_time = ctypes.wintypes.LARGE_INTEGER()
     kernel32 = ctypes.WinDLL("kernel32")
@@ -78,6 +78,7 @@ else: # Linux/MacOS
             raise result
         return xr_time
 # Set up controller tracking, as one possible legitimate headless activity
+# NOTE: this is going to be the place to look to change what we can do/track
 action_set = xr.create_action_set(
     instance=instance,
     create_info=xr.ActionSetCreateInfo(
@@ -87,7 +88,7 @@ action_set = xr.create_action_set(
     ),
 )
 controller_paths = (xr.Path * 2)(  # noqa
-    xr.string_to_path(instance, "/user/hand/left"),
+    xr.string_to_path(instance, "/user/hand/left"), # Can prob disregard left for time being
     xr.string_to_path(instance, "/user/hand/right"),
 )
 controller_pose_action = xr.create_action(
@@ -112,7 +113,7 @@ suggested_bindings = (xr.ActionSuggestedBinding * 2)(
         action=controller_pose_action,
         binding=xr.string_to_path(
             instance=instance,
-            path_string="/user/hand/right/input/grip/pose",
+            path_string="/user/hand/right/input/trigger/grip",
         ),
     ),
 )

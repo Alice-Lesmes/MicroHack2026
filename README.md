@@ -7,7 +7,9 @@ An interface to allow for a [ESP-whatever] to create recoil simulating haptic fe
 
 # How to Run
 - Run SteamVR (this means ALVR setup if you need it)
-- Run OpenVR background processes
+- Run OpenVR background processes (python scripts)
+NOTE: To run the python scripts make sure you have `python -m pip install pyopenxr`
+  Also make sure to have a python virtual environment as well.
 
 Contributors:
 - Alice-Lesmes

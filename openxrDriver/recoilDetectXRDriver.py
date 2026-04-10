@@ -7,7 +7,6 @@ import ctypes
 import platform
 import time
 import xr
-
 # Enumerate the required instance extensions
 extensions = [xr.MND_HEADLESS_EXTENSION_NAME]  # Permits use without a graphics display
 # Tracking controllers in headless mode requires a way to get the current XrTime
@@ -57,7 +56,7 @@ if platform.system() == "Windows":
         if result.is_exception():
             raise result
         return xr_time
-else:
+else: # Linux/MacOS
     timespecTime = xr.timespec()
     pxrConvertTimespecTimeToTimeKHR = ctypes.cast(
         xr.get_instance_proc_addr(

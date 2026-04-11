@@ -2,7 +2,7 @@
 
 // --- DEBUG CONFIGURATION ---
 // Set to 1 to enable Serial output, set to 0 to completely remove it
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 #if DEBUG_MODE
   #define DEBUG_PRINT(x)    Serial.print(x)
@@ -56,7 +56,10 @@ void loop() {
         
         DEBUG_PRINT("Received: ");
         DEBUG_PRINTLN(request);
-        Serial.print("G");
+        if (request == "F") {
+          Serial.print("G");
+        }
+
       }
     }
     

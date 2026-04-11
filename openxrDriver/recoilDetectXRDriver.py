@@ -265,7 +265,7 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
             subaction_path=xr.NULL_PATH
         )
         trigger_state = xr.get_action_state_boolean(session, get_info)
-        if trigger_state.is_active: # Hopefully this is correct, maybe just 'true' might work - AL
+        if trigger_state.is_active or trigger_state is True: # Hopefully this is correct, maybe just 'true' might work - AL
             # Current_state is True while the trigger is held down
             if trigger_state.current_state:
                 # changed_since_last_sync ensures we only trigger once per distinct pull
@@ -274,6 +274,9 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
                     print("We are in business")
                 else:
                     pass # Trigger is being held down
+        else: # Trigger not held down
+            print("Trigger is not being held down")
+
         # Idk what below does other than just print location of HMD and controllers - AL
 
         found_count = 0

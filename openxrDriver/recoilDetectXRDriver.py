@@ -230,7 +230,7 @@ for frame_index in range(300):  # Limit number of frames for demo purposes
             break  # There is no event in the queue at this moment
     if True or session_state == xr.SessionState.FOCUSED: # I think this should be in while true?
         # wait_frame()/begin_frame()/end_frame() are not required in headless mode
-        xr.wait_frame(session=session)  # Helps SteamVR show application name better
+        frame_state = xr.wait_frame(session=session)  # Helps SteamVR show application name better
         xr.begin_frame(session=session)
         # Perform per-frame activities here
         
@@ -306,7 +306,17 @@ for frame_index in range(300):  # Limit number of frames for demo purposes
             print("no controllers active")
         print("Sleeping for .5.....")
         # Sleep periodically to avoid consuming all available system resources
-        xr.end_frame(session, xr.FrameEndInfo())
+        # Headless apps still need to specify a blend mode, usually OPAQUE or the first supported one
+        xr.end_frame(
+            session=session,
+            frame_end_info=xr.FrameEndInfo(
+                display_time=frame_state.predicted_display_time,
+                environment_blend_mode=xr.EnvironmentBlendMode.OPAQUE, # Standard for VR/Headless
+                layer_count=0,
+                layers=None,
+            )
+        )
+
         time.sleep(0.050)
 
 # Clean up

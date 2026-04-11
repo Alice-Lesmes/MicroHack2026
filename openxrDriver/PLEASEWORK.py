@@ -5,6 +5,7 @@ import socket
 # --- Configuration ---
 ESP32_IP = "192.168.8.232" 
 PORT = 8080
+HAPTIC = False
 
 # Global variable to hold our persistent connection
 client_socket = None
@@ -95,7 +96,7 @@ if __name__ == "__main__":
         
         if has_event:
             # 2. Check if the event is a button being pressed down
-            if event.eventType == openvr.VREvent_ButtonPress:
+            if event.eventType == openvr.VREvent_ButtonPress and not HAPTIC:
                 
                 # 3. Check if the specific button was the Trigger (Button ID 33)
                 if event.data.controller.button == openvr.k_EButton_SteamVR_Trigger:
@@ -112,7 +113,7 @@ if __name__ == "__main__":
                             
                             # Removed the print statement here to ensure minimal latency between trigger and send
                             send_message("F")
-            if event.eventType == openvr.VREvent_Input_HapticVibration:
+            if event.eventType == openvr.VREvent_Input_HapticVibration and HAPTIC:
                     device_id = event.trackedDeviceIndex
                     device_class = vr_system.getTrackedDeviceClass(device_id)
                     if device_class == openvr.TrackedDeviceClass_Controller:

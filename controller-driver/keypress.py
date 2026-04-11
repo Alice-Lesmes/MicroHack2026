@@ -8,8 +8,7 @@ A_KEY = 0x1E
 S_KEY = 0x1F
 D_KEY = 0x20
 R_KEY = 0x13
-SPACE_KEY = 0x39 # Scan code for the Spacebar (Trigger)
-
+F10_KEY = 0x44
 SendInput = ctypes.windll.user32.SendInput
 
 # C struct redefinitions 

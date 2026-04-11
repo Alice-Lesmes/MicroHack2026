@@ -10,29 +10,24 @@ EVRInitError ControllerDriver::Activate(uint32_t unObjectId)
 	driverId = unObjectId;
 
 	PropertyContainerHandle_t props = VRProperties()->TrackedDeviceToPropertyContainer(driverId);
+	// Tell SteamVR this device provides inputs but has no physical tracking of its own
+	VRProperties()->SetBoolProperty(props, Prop_NeverTracked_Bool, true);
 
 	VRProperties()->SetStringProperty(props, Prop_InputProfilePath_String, "{esp32}/input/controller_profile.json");
-	VRProperties()->SetInt32Property(props, Prop_ControllerRoleHint_Int32, ETrackedControllerRole::TrackedControllerRole_Treadmill);
-	VRDriverInput()->CreateScalarComponent(props, "/input/joystick/y", &joystickYHandle, EVRScalarType::VRScalarType_Absolute,
-		EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
-	VRDriverInput()->CreateScalarComponent(props, "/input/trackpad/y", &trackpadYHandle, EVRScalarType::VRScalarType_Absolute,
-		EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
-	VRDriverInput()->CreateScalarComponent(props, "/input/joystick/x", &joystickXHandle, EVRScalarType::VRScalarType_Absolute,
-		EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
-	VRDriverInput()->CreateScalarComponent(props, "/input/trackpad/x", &trackpadXHandle, EVRScalarType::VRScalarType_Absolute,
-		EVRScalarUnits::VRScalarUnits_NormalizedTwoSided);
+	VRProperties()->SetInt32Property(props, Prop_ControllerRoleHint_Int32, ETrackedControllerRole::TrackedControllerRole_OptOut);
+
 
 	VRDriverInput()->CreateBooleanComponent(props, "/input/trigger/click", &triggerHandle);
-
+	vr::VRServerDriverHost()->TrackedDevicePoseUpdated(driverId, GetPose(), sizeof(DriverPose_t));
 	return VRInitError_None;
 }
 
 DriverPose_t ControllerDriver::GetPose()
 {
-	// We don't use pose.
+	// We don't use pose (for now).
 	DriverPose_t pose = { 0 };
-	pose.poseIsValid = false;
-	pose.result = TrackingResult_Calibrating_OutOfRange;
+	pose.poseIsValid = true;
+	pose.result = TrackingResult_Running_OK;
 	pose.deviceIsConnected = true;
 
 	HmdQuaternion_t quat;
@@ -47,47 +42,22 @@ DriverPose_t ControllerDriver::GetPose()
 	return pose;
 }
 
-float GetCurrentSpeed() {
-	// Set movement speed.
-	float currMovSpeed = WALK_SPEED;
-	if (GetKeyState('R') & 0x8000) {
-		currMovSpeed = RUN_SPEED;
-	}
-	return currMovSpeed;
-}
 
-
-void UpdateYAxis(VRInputComponentHandle_t joystickYHandle, VRInputComponentHandle_t trackpadYHandle, float currMovSpeed) {
-	int direction = 0;
-	if (GetKeyState('W') & 0x8000) {
-		direction = 1;
-	}
-	else if (GetKeyState('S') & 0x8000) {
-		direction = -1;
-	}
-
-	VRDriverInput()->UpdateScalarComponent(joystickYHandle, currMovSpeed * direction, 0);
-	VRDriverInput()->UpdateScalarComponent(trackpadYHandle, currMovSpeed * direction, 0);
-}
-
-
-void UpdateXAxis(VRInputComponentHandle_t joystickXHandle, VRInputComponentHandle_t trackpadXHandle, float currMovSpeed) {
-	int direction = 0;
-	if (GetKeyState('A') & 0x8000) {
-		direction = -1;
-	}
-	else if (GetKeyState('D') & 0x8000) {
-		direction = 1;
-	}
-
-	VRDriverInput()->UpdateScalarComponent(joystickXHandle, currMovSpeed * direction, 0);
-	VRDriverInput()->UpdateScalarComponent(trackpadXHandle, currMovSpeed * direction, 0);
-}
-
-// NEW: Update Trigger function
 void UpdateTriggerState(VRInputComponentHandle_t triggerHandle) {
-	// Check if the spacebar is pressed
-	bool isTriggerPressed = (GetKeyState(VK_F10) & 0x8000) != 0;
+	// Read the global hardware state of F10
+	bool isTriggerPressed = (GetAsyncKeyState(VK_F10) & 0x8000) != 0;
+
+	// Track the previous state to log only on changes
+	static bool lastState = false;
+	if (isTriggerPressed != lastState) {
+		if (isTriggerPressed) {
+			vr::VRDriverLog()->Log("SUCCESS: ESP32 F10 PRESSED!");
+		}
+		else {
+			vr::VRDriverLog()->Log("SUCCESS: ESP32 F10 RELEASED!");
+		}
+		lastState = isTriggerPressed;
+	}
 
 	// Send the boolean state to SteamVR
 	VRDriverInput()->UpdateBooleanComponent(triggerHandle, isTriggerPressed, 0);
@@ -95,11 +65,16 @@ void UpdateTriggerState(VRInputComponentHandle_t triggerHandle) {
 
 void ControllerDriver::RunFrame()
 {
-	float currMovSpeed = GetCurrentSpeed();
+
 	// Update Y Axis according to the keyboard pressed buttons.
 	//UpdateYAxis(joystickYHandle, trackpadYHandle, currMovSpeed);
 	// Update X Axis according to the keyboard pressed buttons.
 	//UpdateXAxis(joystickXHandle, trackpadXHandle, currMovSpeed);
+	// 1. PUSH THE TRACKING STATE TO STEAMVR EVERY FRAME
+	if (driverId != vr::k_unTrackedDeviceIndexInvalid)
+	{
+		vr::VRServerDriverHost()->TrackedDevicePoseUpdated(driverId, GetPose(), sizeof(DriverPose_t));
+	}
 	UpdateTriggerState(triggerHandle);
 }
 

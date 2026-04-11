@@ -15,7 +15,7 @@
   Adafruit_MPU6050 mpu;
 #endif
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
 
 

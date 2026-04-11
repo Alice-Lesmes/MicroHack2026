@@ -2,7 +2,7 @@ import time
 import socket
 
 # 1. ADD SPACE_KEY TO YOUR IMPORTS
-from keypress import PressKey, ReleaseKey, W_KEY, R_KEY, S_KEY, A_KEY, D_KEY, SPACE_KEY
+from keypress import PressKey, ReleaseKey, W_KEY, R_KEY, S_KEY, A_KEY, D_KEY, F10_KEY
 from threading import Thread
 
 # Is moving consts
@@ -64,9 +64,11 @@ def stop_movement():
 # 2. CREATE A NEW FUNCTION TO HANDLE THE TRIGGER
 def check_trigger(trigger_state):
     if trigger_state == TRIGGER_ON:
-        PressKey(SPACE_KEY)
+        PressKey(F10_KEY)
+        #print("TRIGGER ON")
     else:
-        ReleaseKey(SPACE_KEY)
+        ReleaseKey(F10_KEY)
+        #print("TRIGGER OFF")
 
 if __name__ == "__main__":
     print('Creating socket...')

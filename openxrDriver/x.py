@@ -145,6 +145,7 @@ if __name__ == "__main__":
                 device_id = event.trackedDeviceIndex
                 device_class = vr_system.getTrackedDeviceClass(device_id)
                 if is_right_hand(event, vr_system, openvr):
+                    print("is right")
                     v_duration = event.data.hapticVibration.fDurationSeconds
                     v_end_time = time.time() + v_duration
                     while time.time() < v_duration:

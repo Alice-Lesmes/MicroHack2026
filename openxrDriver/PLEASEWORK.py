@@ -112,5 +112,14 @@ if __name__ == "__main__":
                             
                             # Removed the print statement here to ensure minimal latency between trigger and send
                             send_message("F")
+            if event.eventType == openvr.VREvent_Input_HapticVibration:
+                    device_id = event.trackedDeviceIndex
+                    device_class = vr_system.getTrackedDeviceClass(device_id)
+                    if device_class == openvr.TrackedDeviceClass_Controller:
+                        # 5. Ensure it is the RIGHT hand controller before firing
+                        role = vr_system.getControllerRoleForTrackedDeviceIndex(device_id)
+                        if role == openvr.TrackedControllerRole_RightHand:
+                            # Removed the print statement here to ensure minimal latency between trigger and send
+                            send_message("F")
                             
         time.sleep(0.001) # Poll very fast so you don't miss queue events

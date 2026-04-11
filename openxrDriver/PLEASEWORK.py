@@ -5,7 +5,7 @@ import socket
 # --- Configuration ---
 ESP32_IP = "192.168.8.232" 
 PORT = 8080
-HAPTIC = False
+HAPTIC = True
 TRIGGER_THRESHOLD = 0.1 # Change this prob
 TIME_TO_POLL = 0.001
 

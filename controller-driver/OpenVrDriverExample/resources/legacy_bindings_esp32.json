@@ -6,24 +6,6 @@
       "sources": [
         {
           "inputs": {
-            "position": {
-              "output": "/actions/legacy/in/left_axis0_value"
-            }
-          },
-          "mode": "trackpad",
-          "path": "/user/treadmill/input/trackpad"
-        },
-        {
-          "inputs": {
-            "position": {
-              "output": "/actions/legacy/in/left_axis0_value"
-            }
-          },
-          "mode": "joystick",
-          "path": "/user/treadmill/input/joystick"
-        },
-        {
-          "inputs": {
             "click": {
               "output": "/actions/legacy/in/left_trigger_click"
             }

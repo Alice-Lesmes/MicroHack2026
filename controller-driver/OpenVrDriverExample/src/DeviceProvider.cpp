@@ -11,7 +11,7 @@ EVRInitError DeviceProvider::Init(IVRDriverContext* pDriverContext)
     VRDriverLog()->Log("Initializing esp32 controller"); //this is how you log out Steam's log file.
 
     controllerDriver = new ControllerDriver();
-    VRServerDriverHost()->TrackedDeviceAdded("esp32_controller", TrackedDeviceClass_Controller, controllerDriver); //add all your devices like this.
+    VRServerDriverHost()->TrackedDeviceAdded("esp32_controller", TrackedDeviceClass_GenericTracker, controllerDriver); //add all your devices like this.
 
     return vr::VRInitError_None;
 }

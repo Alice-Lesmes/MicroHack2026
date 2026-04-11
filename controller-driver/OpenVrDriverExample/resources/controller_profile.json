@@ -2,7 +2,7 @@
   "jsonid": "input_profile",
   "controller_type": "esp32_controller",
   "legacy_binding" : "{esp32}/input/legacy_bindings_esp32.json",
-  "device_class" : "TrackedDeviceClass_Controller",
+  "device_class" : "TrackedDeviceClass_GenericTracker",
   "input_bindingui_mode": "single_device",
   "input_bindingui_single": {
 		"image": "{esp32}/icons/game_controller.svg"

@@ -2,7 +2,7 @@
 An interface to allow for a [ESP-whatever] to create recoil simulating haptic feedback in a gun-stock adapter.
 
 # One time setup
-- for wi-fi based connectivity, flash ./esp32-vr/vr-esp-receive/vr-esp-receive.ino onto an ESP32, then run [***WHERE WIFI CODE IS (test is ./pc-wifi-test/wifi.py)***]
+- for wi-fi based connectivity, flash ./esp32-vr/vr-esp-receive/vr-esp-receive.ino onto an ESP32, then when steamVR is launched, run ./openxrDriver/PLEASEWORK.py
 - for bluetooth based connectivity, flash ./esp32-vr/bt-vr-esp-receive/bt-receiver/bt-receiver.ino onto ESP32, then run [*** WHERE BLUETOOTH CODE IS (test at ./pc-wifi-test/bluetooth.py)***]
 
 # How to Run

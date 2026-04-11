@@ -32,7 +32,7 @@ session = xr.create_session(
     )
 )
 
-if platform.system() == "Windows":
+if platform.system() == "Windows": # TODO: work on this stuff, but for now i'm priortising Linux
     import ctypes.wintypes
     pc_time = ctypes.wintypes.LARGE_INTEGER()
     kernel32 = ctypes.WinDLL("kernel32")
@@ -78,6 +78,7 @@ else: # Linux/MacOS
             raise result
         return xr_time
 # Set up controller tracking, as one possible legitimate headless activity
+# NOTE: this is going to be the place to look to change what we can do/track
 action_set = xr.create_action_set(
     instance=instance,
     create_info=xr.ActionSetCreateInfo(
@@ -87,7 +88,7 @@ action_set = xr.create_action_set(
     ),
 )
 controller_paths = (xr.Path * 2)(  # noqa
-    xr.string_to_path(instance, "/user/hand/left"),
+    xr.string_to_path(instance, "/user/hand/left"), # Can prob disregard left for time being
     xr.string_to_path(instance, "/user/hand/right"),
 )
 controller_pose_action = xr.create_action(
@@ -100,22 +101,51 @@ controller_pose_action = xr.create_action(
         subaction_paths=controller_paths,
     ),
 )
+trigger_click_action = xr.create_action( # AI said this, pls work
+    action_set=action_set,
+    create_info=xr.ActionCreateInfo(
+        action_type=xr.ActionType.BOOLEAN_INPUT,
+        action_name="trigger_click",
+        localized_action_name="Trigger Click",
+        count_subaction_paths=len(controller_paths),
+        subaction_paths=controller_paths,
+    ),
+)
 suggested_bindings = (xr.ActionSuggestedBinding * 2)(
+    # Can ignore this below one - AL
     xr.ActionSuggestedBinding(
         action=controller_pose_action,
         binding=xr.string_to_path(
             instance=instance,
             path_string="/user/hand/left/input/grip/pose",
         ),
-    ),
+    ), # This here is useful to detect trigger clicks - AL
     xr.ActionSuggestedBinding(
-        action=controller_pose_action,
+        action=trigger_click_action, 
         binding=xr.string_to_path(
             instance=instance,
-            path_string="/user/hand/right/input/grip/pose",
+            # Check the input trigger to see if it's 'pressed', 
+            # can change to 'value' instead of 'click' if you want granularity
+            path_string="/user/hand/right/input/trigger/value",
         ),
     ),
 )
+print(xr.string_to_path(instance, "/interaction_profiles/oculus/touch_controller"))
+# Suggest Oculus keybindings
+xr.suggest_interaction_profile_bindings(
+    instance=instance,
+    suggested_bindings=xr.InteractionProfileSuggestedBinding(
+        interaction_profile=xr.string_to_path(
+            instance,
+            # I sure hope this is the same for quest, should be
+            "/interaction_profiles/oculus/touch_controller",
+        ),
+        count_suggested_bindings=len(suggested_bindings),
+        suggested_bindings=suggested_bindings,
+    ),
+)
+
+"""
 xr.suggest_interaction_profile_bindings(
     instance=instance,
     suggested_bindings=xr.InteractionProfileSuggestedBinding(
@@ -127,6 +157,7 @@ xr.suggest_interaction_profile_bindings(
         suggested_bindings=suggested_bindings,
     ),
 )
+
 xr.suggest_interaction_profile_bindings(
     instance=instance,
     suggested_bindings=xr.InteractionProfileSuggestedBinding(
@@ -138,6 +169,7 @@ xr.suggest_interaction_profile_bindings(
         suggested_bindings=suggested_bindings,
     ),
 )
+"""
 xr.attach_session_action_sets(
     session=session,
     attach_info=xr.SessionActionSetsAttachInfo(
@@ -151,14 +183,7 @@ action_spaces = [
             action=controller_pose_action,
             subaction_path=controller_paths[0],
         ),
-    ),
-    xr.create_action_space(
-        session=session,
-        create_info=xr.ActionSpaceCreateInfo(
-            action=controller_pose_action,
-            subaction_path=controller_paths[1],
-        ),
-    ),
+    )
 ]
 reference_space = xr.create_reference_space(
     session=session,
@@ -174,13 +199,15 @@ view_reference_space = xr.create_reference_space(
 )
 session_state = xr.SessionState.UNKNOWN
 # Loop over session frames
-for frame_index in range(30):  # Limit number of frames for demo purposes
+for frame_index in range(300):  # Limit number of frames for demo purposes
     # Poll session state changed events
+    
     while True:
         try:
             event_buffer = xr.poll_event(instance)
             event_type = xr.StructureType(event_buffer.type)
-            if event_type == xr.StructureType.EVENT_DATA_SESSION_STATE_CHANGED:
+            print(event_type.name)
+            if event_type == xr.StructureType.EVENT_DATA_SESSION_STATE_CHANGED: # This shouldn't maybe exist Since only looks for changes in state
                 event = ctypes.cast(
                     ctypes.byref(event_buffer),
                     ctypes.POINTER(xr.EventDataSessionStateChanged)).contents
@@ -197,17 +224,26 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
                 elif session_state == xr.SessionState.STOPPING:
                     xr.destroy_session(session)
                     session = None
+            else:
+                break;
         except xr.EventUnavailable:
             break  # There is no event in the queue at this moment
-    if session_state == xr.SessionState.FOCUSED:
+    if True or session_state == xr.SessionState.FOCUSED: # I think this should be in while true?
         # wait_frame()/begin_frame()/end_frame() are not required in headless mode
-        xr.wait_frame(session=session)  # Helps SteamVR show application name better
+        frame_state = xr.wait_frame(session=session)  # Helps SteamVR show application name better
+        xr.begin_frame(session=session)
         # Perform per-frame activities here
+        
+        # This code is to please my LSP, and maybe python idk - AL
+        if (session == None):
+            # FIXME: maybe change this print statement :3 - AL
+            print("Freak the FUCK out")
+            exit()
 
         if platform.system() == "Windows":
             kernel32.QueryPerformanceCounter(ctypes.byref(pc_time))
             xr_time_now = time_from_perf_counter(instance, pc_time)
-        else:
+        else: # Linux
             time_float = time.clock_gettime(time.CLOCK_MONOTONIC)
             timespecTime.tv_sec = int(time_float)
             timespecTime.tv_nsec = int((time_float % 1) * 1e9)
@@ -217,12 +253,37 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
             action_set=action_set,
             subaction_path=xr.NULL_PATH,
         )
+        # Idk what this does - AL
         xr.sync_actions(
             session=session,
             sync_info=xr.ActionsSyncInfo(
                 active_action_sets=[active_action_set],
             ),
         )
+        # Below is mostly/all vibed
+        # I assume the AI meant 'active_action_sets=' not just 'action_sets='
+        sync_info = xr.ActionsSyncInfo(active_action_sets=[active_action_set])
+        xr.sync_actions(session, sync_info)
+        # 2. Ask for the specific state of our trigger action
+        get_info = xr.ActionStateGetInfo(
+            action=trigger_click_action, 
+            subaction_path=xr.NULL_PATH
+        )
+        trigger_state = xr.get_action_state_boolean(session, get_info)
+        if trigger_state.is_active or trigger_state is True: # Hopefully this is correct, maybe just 'true' might work - AL
+            # Current_state is True while the trigger is held down
+            if trigger_state.current_state:
+                # changed_since_last_sync ensures we only trigger once per distinct pull
+                if trigger_state.changed_since_last_sync:
+                    print("Trigger was just pulled!")
+                    print("We are in business")
+                else:
+                    pass # Trigger is being held down
+        else: # Trigger not held down
+            print("Trigger is not being held down")
+
+        # Idk what below does other than just print location of HMD and controllers - AL
+
         found_count = 0
         hmd_location = xr.locate_space(
             space=view_reference_space,
@@ -243,9 +304,18 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
                 found_count += 1
         if found_count == 0:
             print("no controllers active")
-
+        print("Sleeping for .5.....")
         # Sleep periodically to avoid consuming all available system resources
-        time.sleep(0.500)
+        # Headless apps still need to specify a blend mode, usually OPAQUE or the first supported one
+        xr.end_frame(
+            session=session,
+            frame_end_info=xr.FrameEndInfo(
+                display_time=frame_state.predicted_display_time,
+                environment_blend_mode=xr.EnvironmentBlendMode.OPAQUE, # Standard for VR/Headless
+                layer_count=0,
+            )
+        )
+        time.sleep(0.050)
 
 # Clean up
 system = xr.NULL_SYSTEM_ID
@@ -253,3 +323,5 @@ xr.destroy_action_set(action_set)
 action_set = None
 xr.destroy_instance(instance)
 instance = None
+print("We are done cleaning up, exit")
+exit()

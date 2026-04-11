@@ -224,7 +224,7 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
                     session = None
         except xr.EventUnavailable:
             break  # There is no event in the queue at this moment
-    if session_state == xr.SessionState.FOCUSED:
+    if session_state == xr.SessionState.FOCUSED: # I think this should be in while true?
         # wait_frame()/begin_frame()/end_frame() are not required in headless mode
         xr.wait_frame(session=session)  # Helps SteamVR show application name better
         # Perform per-frame activities here
@@ -299,7 +299,7 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
                 found_count += 1
         if found_count == 0:
             print("no controllers active")
-
+        print("Sleeping for .5.....")
         # Sleep periodically to avoid consuming all available system resources
         time.sleep(0.500)
 
@@ -309,3 +309,5 @@ xr.destroy_action_set(action_set)
 action_set = None
 xr.destroy_instance(instance)
 instance = None
+print("We are done cleaning up, exit")
+exit()

@@ -5,8 +5,9 @@ import socket
 # --- Configuration ---
 ESP32_IP = "192.168.8.232" 
 PORT = 8080
-HAPTIC = True
+HAPTIC = False
 TRIGGER_THRESHOLD = 0.1 # Change this prob
+TIME_TO_POLL = 0.001
 
 # Global variable to hold our persistent connection
 client_socket = None
@@ -78,6 +79,20 @@ def send_message(message):
             except Exception as retry_err:
                 print(f"Failed to send after reconnect: {retry_err}")
 
+def is_right_hand(event, vr_system, openvr) -> bool:
+    if event.eventType == openvr.VREvent_Input_HapticVibration and HAPTIC:
+        print("Received Haptic")
+        device_id = event.trackedDeviceIndex
+        device_class = vr_system.getTrackedDeviceClass(device_id)
+        if device_class == openvr.TrackedDeviceClass_Controller:
+            print("Is Controller")
+            # 5. Ensure it is the RIGHT hand controller before firing
+            role = vr_system.getControllerRoleForTrackedDeviceIndex(device_id)
+            if role == openvr.TrackedControllerRole_RightHand:
+                print("Is Right Hand")
+                return True
+    return False
+
 # --- OpenVR Setup ---
 print("Initializing OpenVR...")
 vr_system = openvr.init(openvr.VRApplication_Background)
@@ -110,44 +125,43 @@ if __name__ == "__main__":
                         # 5. Ensure it is the RIGHT hand controller before firing
                         role = vr_system.getControllerRoleForTrackedDeviceIndex(device_id)
                         if role == openvr.TrackedControllerRole_RightHand:
+                            right_id = vr_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
+                            result, pControllerState = vr_system.getControllerState(right_id)
                             while True:
-                                right_id = vr_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
-                                result, pControllerState = vr_system.getControllerState(right_id)
                                 if result:
+                                    right_id = vr_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
+                                    result, pControllerState = vr_system.getControllerState(right_id)
                                     trigger_value = pControllerState.rAxis[1].x 
                                     if trigger_value > TRIGGER_THRESHOLD:  # Threshold for "held down"
                                         # This will fire EVERY loop iteration while held
                                         print("Sending fire serial...")
                                         send_message("F")
-                                        time.sleep(0.001) # Poll very fast so you don't miss queue events
                                     else:
                                         break
+                                    time.sleep(TIME_TO_POLL) # Poll very fast so you don't miss queue events
                                 else:
                                     break
             if event.eventType == openvr.VREvent_Input_HapticVibration and HAPTIC:
                 print("Received Haptic")
                 device_id = event.trackedDeviceIndex
                 device_class = vr_system.getTrackedDeviceClass(device_id)
-                if device_class == openvr.TrackedDeviceClass_Controller:
-                    print("Is Controller")
-                    # 5. Ensure it is the RIGHT hand controller before firing
-                    role = vr_system.getControllerRoleForTrackedDeviceIndex(device_id)
-                    if role == openvr.TrackedControllerRole_RightHand:
-                        print("Is Right Hand")
-                        while True:
-                            right_id = vr_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
-                            result, pControllerState = vr_system.getControllerState(right_id)
-                            print(f"Loop entered and result = {bool(result)}")
-                            if result:
-                                trigger_value = pControllerState.rAxis[1].x 
-                                print(f"Trigger value = {trigger_value}")
-                                if trigger_value > TRIGGER_THRESHOLD:  # Threshold for "held down"
-                                    # This will fire EVERY loop iteration while held
-                                    print("Sending fire serial...")
-                                    send_message("F")
-                                    time.sleep(0.001) # Poll very fast so you don't miss queue events
-                                else:
-                                    break
+                if is_right_hand(event, vr_system, openvr):
+                    v_duration = event.data.hapticVibration.fDurationSeconds
+                    v_end_time = time.time() + v_duration
+                    while time.time() < v_duration:
+                        right_id = vr_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
+                        result, pControllerState = vr_system.getControllerState(right_id)
+                        print(f"Loop entered and result = {bool(result)}")
+                        if result:
+                            trigger_value = pControllerState.rAxis[1].x 
+                            print(f"Trigger value = {trigger_value}")
+                            if trigger_value > TRIGGER_THRESHOLD and is_right_hand(event, vr_system, openvr):  # Threshold for "held down"
+                                # This will fire EVERY loop iteration while held
+                                print("Sending fire serial...")
+                                send_message("F")
+                                time.sleep(TIME_TO_POLL) # Poll very fast so you don't miss queue events
                             else:
                                 break
-        time.sleep(0.001) # Poll very fast so you don't miss queue events
+                        else:
+                            break
+        time.sleep(TIME_TO_POLL) # Poll very fast so you don't miss queue events

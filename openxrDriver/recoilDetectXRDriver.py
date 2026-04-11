@@ -205,11 +205,13 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
         try:
             event_buffer = xr.poll_event(instance)
             event_type = xr.StructureType(event_buffer.type)
-            if event_type == xr.StructureType.EVENT_DATA_SESSION_STATE_CHANGED:
+            print(event_type)
+            if event_type == xr.StructureType.EVENT_DATA_SESSION_STATE_CHANGED: # This shouldn't maybe exist Since only looks for changes in state
                 event = ctypes.cast(
                     ctypes.byref(event_buffer),
                     ctypes.POINTER(xr.EventDataSessionStateChanged)).contents
                 session_state = xr.SessionState(event.state)
+                print(session_state)
                 print(f"OpenXR session state changed to xr.SessionState.{session_state.name}")
                 if session_state == xr.SessionState.READY:
                     xr.begin_session(

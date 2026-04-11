@@ -15,6 +15,21 @@
   Adafruit_MPU6050 mpu;
 #endif
 
+#define DEBUG_MODE 0
+
+
+
+#if DEBUG_MODE
+  #define DEBUG_PRINT(x)    Serial.print(x)
+  #define DEBUG_PRINTLN(x)  Serial.println(x)
+  #define DEBUG_BEGIN(x)    Serial.begin(x)
+#else
+  // If DEBUG_MODE is 0, these macros do absolutely nothing
+  #define DEBUG_PRINT(x)
+  #define DEBUG_PRINTLN(x)
+  #define DEBUG_BEGIN(x)
+#endif
+
 WiFiClient client;
 
 const char* ssid = "GL-SFT1200-428";
@@ -26,6 +41,9 @@ const int16_t port = 8080;
 const int TRIGGER_PIN = 15;
 const int OUT_TEST = 25;
 int out_toggle = 0;
+
+#define STM32_RX_PIN 17
+#define STM32_TX_PIN 18
 
 // Moving consts.
 const int STOPPED = 0;
@@ -60,12 +78,13 @@ int currentDirection = MOV_FORWARD;
 int currentTilt = CENTER;
 int currentTrigger = 0; 
 
-int read_delay = 100;
+int read_delay = 10;
 
-
+HardwareSerial STM32Serial(1);
 
 void setup(void) {
   Serial.begin(115200);
+  STM32Serial.begin(115200, SERIAL_8N1, STM32_RX_PIN, STM32_TX_PIN);
 
   // Configure the trigger pin
   pinMode(TRIGGER_PIN, INPUT_PULLUP);
@@ -133,13 +152,14 @@ void loop() {
     // Append the trigger state to the end of the payload
     String result = String(currMov + currSpeed + currDir + currTilt + currTrig);
     
-    Serial.println(result);
+    DEBUG_PRINTLN(result);
+    STM32Serial.print("F\n");
     client.print(result);
   } else {
     client.stop();
     connectSocket();
   }
-  Serial.println("----");
+  DEBUG_PRINTLN("----");
   delay(read_delay);
 }
 

@@ -5,7 +5,7 @@ import socket
 # --- Configuration ---
 ESP32_IP = "192.168.8.232" 
 PORT = 8080
-HAPTIC = False
+HAPTIC = True
 TRIGGER_THRESHOLD = 0.1 # Change this prob
 
 # Global variable to hold our persistent connection
@@ -125,24 +125,29 @@ if __name__ == "__main__":
                                 else:
                                     break
             if event.eventType == openvr.VREvent_Input_HapticVibration and HAPTIC:
-                    device_id = event.trackedDeviceIndex
-                    device_class = vr_system.getTrackedDeviceClass(device_id)
-                    if device_class == openvr.TrackedDeviceClass_Controller:
-                        # 5. Ensure it is the RIGHT hand controller before firing
-                        role = vr_system.getControllerRoleForTrackedDeviceIndex(device_id)
-                        if role == openvr.TrackedControllerRole_RightHand:
-                            while True:
-                                right_id = vr_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
-                                result, pControllerState = vr_system.getControllerState(right_id)
-                                if result:
-                                    trigger_value = pControllerState.rAxis[1].x 
-                                    if trigger_value > TRIGGER_THRESHOLD:  # Threshold for "held down"
-                                        # This will fire EVERY loop iteration while held
-                                        print("Sending fire serial...")
-                                        send_message("F")
-                                        time.sleep(0.001) # Poll very fast so you don't miss queue events
-                                    else:
-                                        break
+                print("Received Haptic")
+                device_id = event.trackedDeviceIndex
+                device_class = vr_system.getTrackedDeviceClass(device_id)
+                if device_class == openvr.TrackedDeviceClass_Controller:
+                    print("Is Controller")
+                    # 5. Ensure it is the RIGHT hand controller before firing
+                    role = vr_system.getControllerRoleForTrackedDeviceIndex(device_id)
+                    if role == openvr.TrackedControllerRole_RightHand:
+                        print("Is Right Hand")
+                        while True:
+                            right_id = vr_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
+                            result, pControllerState = vr_system.getControllerState(right_id)
+                            print(f"Loop entered and result = {bool(result)}")
+                            if result:
+                                trigger_value = pControllerState.rAxis[1].x 
+                                print(f"Trigger value = {trigger_value}")
+                                if trigger_value > TRIGGER_THRESHOLD:  # Threshold for "held down"
+                                    # This will fire EVERY loop iteration while held
+                                    print("Sending fire serial...")
+                                    send_message("F")
+                                    time.sleep(0.001) # Poll very fast so you don't miss queue events
                                 else:
                                     break
+                            else:
+                                break
         time.sleep(0.001) # Poll very fast so you don't miss queue events

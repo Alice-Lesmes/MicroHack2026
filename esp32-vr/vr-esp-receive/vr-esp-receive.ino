@@ -1,57 +1,66 @@
+#include <WiFi.h>
 
-  #include <WiFi.h>
+// --- DEBUG CONFIGURATION ---
+// Set to 1 to enable Serial output, set to 0 to completely remove it
+#define DEBUG_MODE 1
 
-  // Replace with your Wi-Fi credentials
-  const char* ssid = "GL-SFT1200-428";
-  const char* password = "goodlife";
+#if DEBUG_MODE
+  #define DEBUG_PRINT(x)    Serial.print(x)
+  #define DEBUG_PRINTLN(x)  Serial.println(x)
+  #define DEBUG_BEGIN(x)    Serial.begin(x)
+#else
+  // If DEBUG_MODE is 0, these macros do absolutely nothing
+  #define DEBUG_PRINT(x)
+  #define DEBUG_PRINTLN(x)
+  #define DEBUG_BEGIN(x)
+#endif
+// ---------------------------
 
-  // Create a TCP server listening on port 8080
-  WiFiServer server(8080);
+const char* ssid = "GL-SFT1200-428";
+const char* password = "goodlife";
 
-  void setup() {
-    Serial.begin(115200);
+WiFiServer server(8080);
 
-    // 1. Connect to Wi-Fi
-    Serial.print("\nConnecting to ");
-    Serial.println(ssid);
-    WiFi.begin(ssid, password);
+void setup() {
+  // This will only run if DEBUG_MODE is 1
+  DEBUG_BEGIN(115200);
+  delay(1000); // Small delay to allow USB CDC to connect
 
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(200);
-      Serial.print(".");
-    }
+  DEBUG_PRINT("\nConnecting to ");
+  DEBUG_PRINTLN(ssid);
+  
+  WiFi.begin(ssid, password);
 
-    Serial.println("\nWiFi connected.");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(200);
+    DEBUG_PRINT(".");
+  }
+
+  DEBUG_PRINTLN("\nWiFi connected.");
+  DEBUG_PRINT("ESP32 IP Address: ");
+  DEBUG_PRINTLN(WiFi.localIP()); 
+
+  server.begin();
+  DEBUG_PRINTLN("Server started. Listening for messages...");
+}
+
+void loop() {
+  WiFiClient client = server.available();
+
+  if (client) {
+    DEBUG_PRINTLN("\n[New Client Connected]");
     
-    // You will need this IP address for your Python script!
-    Serial.print("ESP32 IP Address: ");
-    Serial.println(WiFi.localIP()); 
-
-    // 2. Start the TCP server
-    server.begin();
-    Serial.println("Server started. Listening for messages...");
-  }
-
-  void loop() {
-    // 3. Check if a Python client has connected
-    WiFiClient client = server.available();
-
-    if (client) {
-      Serial.println("\n[New Client Connected]");
-      
-      // 4. Read data while the client remains connected
-      while (client.connected()) {
-        if (client.available()) {
-          // Read the incoming string until a newline character is received
-          String request = client.readStringUntil('\n');
-          
-          Serial.print("Received: ");
-          Serial.println(request);
-        }
+    while (client.connected()) {
+      if (client.available()) {
+        String request = client.readStringUntil('\n');
+        
+        DEBUG_PRINT("Received: ");
+        DEBUG_PRINTLN(request);
+        Serial.print("G");
       }
-      
-      // 5. Close the connection when done
-      client.stop();
-      Serial.println("[Client Disconnected]");
     }
+    
+    client.stop();
+    DEBUG_PRINTLN("[Client Disconnected]");
   }
+}

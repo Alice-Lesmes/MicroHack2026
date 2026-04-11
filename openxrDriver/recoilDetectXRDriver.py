@@ -199,19 +199,19 @@ view_reference_space = xr.create_reference_space(
 )
 session_state = xr.SessionState.UNKNOWN
 # Loop over session frames
-for frame_index in range(30):  # Limit number of frames for demo purposes
+for frame_index in range(300):  # Limit number of frames for demo purposes
     # Poll session state changed events
+    
     while True:
         try:
             event_buffer = xr.poll_event(instance)
             event_type = xr.StructureType(event_buffer.type)
-            print(event_type)
+            print(event_type.name)
             if event_type == xr.StructureType.EVENT_DATA_SESSION_STATE_CHANGED: # This shouldn't maybe exist Since only looks for changes in state
                 event = ctypes.cast(
                     ctypes.byref(event_buffer),
                     ctypes.POINTER(xr.EventDataSessionStateChanged)).contents
                 session_state = xr.SessionState(event.state)
-                print(session_state)
                 print(f"OpenXR session state changed to xr.SessionState.{session_state.name}")
                 if session_state == xr.SessionState.READY:
                     xr.begin_session(
@@ -224,11 +224,14 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
                 elif session_state == xr.SessionState.STOPPING:
                     xr.destroy_session(session)
                     session = None
+            else:
+                break;
         except xr.EventUnavailable:
             break  # There is no event in the queue at this moment
-    if session_state == xr.SessionState.FOCUSED: # I think this should be in while true?
+    if True or session_state == xr.SessionState.FOCUSED: # I think this should be in while true?
         # wait_frame()/begin_frame()/end_frame() are not required in headless mode
         xr.wait_frame(session=session)  # Helps SteamVR show application name better
+        xr.begin_frame(session=session)
         # Perform per-frame activities here
         
         # This code is to please my LSP, and maybe python idk - AL
@@ -303,7 +306,8 @@ for frame_index in range(30):  # Limit number of frames for demo purposes
             print("no controllers active")
         print("Sleeping for .5.....")
         # Sleep periodically to avoid consuming all available system resources
-        time.sleep(0.500)
+        xr.end_frame(session, xr.FrameEndInfo())
+        time.sleep(0.050)
 
 # Clean up
 system = xr.NULL_SYSTEM_ID

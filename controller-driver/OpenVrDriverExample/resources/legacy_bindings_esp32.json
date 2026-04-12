@@ -1,46 +1,23 @@
 {
   "bindings": {
     "/actions/legacy": {
-      "haptics": [],
-      "poses": [],
       "sources": [
         {
           "inputs": {
-            "position": {
-              "output": "/actions/legacy/in/left_axis0_value"
-            }
-          },
-          "mode": "trackpad",
-          "path": "/user/treadmill/input/trackpad"
-        },
-        {
-          "inputs": {
-            "position": {
-              "output": "/actions/legacy/in/left_axis0_value"
-            }
-          },
-          "mode": "joystick",
-          "path": "/user/treadmill/input/joystick"
-        },
-        {
-          "inputs": {
             "click": {
-              "output": "/actions/legacy/in/left_trigger_click"
+              "output": "/actions/legacy/in/right_axis1_press"
+            },
+            "pull": {
+              "output": "/actions/legacy/in/right_axis1_value"
             }
           },
           "mode": "trigger",
-          "path": "/user/treadmill/input/trigger"
+          "path": "/user/esp32_controller2/input/trigger"
         }
       ]
     }
   },
-  "category": "legacy",
-  "controller_type": "esp32_controller",
-  "description": "Legacy mapping for ESP32",
-  "name": "Legacy_Binding_Esp32",
-  "options": {
-    "mirror_actions": false,
-    "returnBindingsWithLeftHand": true,
-    "simulated_controller_type": "none"
-  }
+  "controller_type": "my_custom_esp32_controller",
+  "description": "Legacy bindings for ESP32 Controller to act as a right trigger.",
+  "name": "ESP32 Legacy Bindings"
 }

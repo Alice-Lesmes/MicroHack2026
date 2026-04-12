@@ -56,7 +56,7 @@ public:
 	Returns the Pose for your device. Pose is an object that contains the position, rotation, velocity, 
 	and angular velocity of your device.
 	**/
-	DriverPose_t GetPose();
+	DriverPose_t GetPose();	
 
 	/**
 	You can retrieve the state of your device here and update OpenVR if anything has changed. This 
@@ -72,5 +72,7 @@ private:
 	VRInputComponentHandle_t joystickXHandle;
 	VRInputComponentHandle_t trackpadXHandle;
 	VRInputComponentHandle_t triggerHandle;
+	VRInputComponentHandle_t m_compTriggerClick;
+	VRInputComponentHandle_t m_compTriggerValue;
 
 };

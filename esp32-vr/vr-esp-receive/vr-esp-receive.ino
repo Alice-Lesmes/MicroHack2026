@@ -5,9 +5,9 @@
 
 // --- DEBUG CONFIGURATION ---
 // Set to 1 to enable Serial output, set to 0 to completely remove it
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 #define USE_UDP 1
-
+#define BAUD_RATE 9600
 
 
 #if DEBUG_MODE
@@ -25,6 +25,8 @@
 // Assuming you want RX on 17 and TX on 18
 #define STM32_RX_PIN 17
 #define STM32_TX_PIN 18
+#define STM32_NEIGHBOUR 16
+#define STM32_NEIGHBOUR_2 8
 
 
 const char* ssid = "GL-SFT1200-428";
@@ -41,8 +43,8 @@ char incomingPacket[255]; // Buffer for incoming data
 
 void setup() {
   // This will only run if DEBUG_MODE is 1
-  Serial.begin(115200);
-  STM32Serial.begin(115200, SERIAL_8N1, STM32_RX_PIN, STM32_TX_PIN);
+  Serial.begin(BAUD_RATE);
+  STM32Serial.begin(BAUD_RATE, SERIAL_8N1, STM32_RX_PIN, STM32_TX_PIN);
   delay(100); // Small delay to allow USB CDC to connect
   DEBUG_PRINT("\nConnecting to ");
   DEBUG_PRINTLN(ssid);
@@ -57,7 +59,10 @@ void setup() {
   DEBUG_PRINTLN("\nWiFi connected.");
   DEBUG_PRINT("ESP32 IP Address: ");
   DEBUG_PRINTLN(WiFi.localIP()); 
-
+  pinMode(STM32_NEIGHBOUR, OUTPUT);
+  pinMode(STM32_NEIGHBOUR_2, OUTPUT);
+  digitalWrite(STM32_NEIGHBOUR, LOW);
+  digitalWrite(STM32_NEIGHBOUR_2, LOW);
 
   #if USE_UDP
 // 2. Start listening on the UDP port
